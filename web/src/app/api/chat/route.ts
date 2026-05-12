@@ -1,9 +1,8 @@
+import { createOpenAI } from "@ai-sdk/openai";
+import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { buildDigitalTwinSystemPrompt } from "@/lib/digitalTwin";
 
-type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
   const key = process.env.OPENROUTER_API_KEY;
@@ -17,72 +16,50 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON body." }, { status: 400 });
-  }
-
-  const messages = (body as { messages?: ChatMessage[] }).messages;
-  if (!Array.isArray(messages) || messages.length === 0) {
+  const body = (await req.json().catch(() => null)) as null | {
+    messages?: unknown[];
+  };
+  const rawMessages = body?.messages;
+  if (!Array.isArray(rawMessages) || rawMessages.length === 0) {
     return Response.json(
-      { error: "Body must include messages: ChatMessage[] (non-empty)." },
+      { error: "Body must include messages: UIMessage[] (non-empty)." },
       { status: 400 },
     );
   }
 
-  const safeMessages = messages
-    .slice(-16)
-    .map((m) => ({
-      role: m?.role,
-      content: typeof m?.content === "string" ? m.content : "",
-    }))
-    .filter((m) => (m.role === "user" || m.role === "assistant") && m.content);
+  // Back-compat: earlier iterations used `{ content: [...] }` instead of AI SDK v6 `{ parts: [...] }`.
+  const messages = rawMessages.map((m) => {
+    const msg = m as Partial<UIMessage> & { content?: UIMessage["parts"] };
+    if (Array.isArray(msg.parts)) return msg as UIMessage;
+    if (Array.isArray(msg.content)) return { ...msg, parts: msg.content } as UIMessage;
+    return msg as UIMessage;
+  });
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return Response.json(
+      { error: "Body must include messages: UIMessage[] (non-empty)." },
+      { status: 400 },
+    );
+  }
+
+  const openrouter = createOpenAI({
+    apiKey: key,
+    baseURL: "https://openrouter.ai/api/v1",
+    headers: {
+      // Recommended by OpenRouter for analytics/rate-limits:
+      "HTTP-Referer": "http://localhost",
+      "X-Title": "Sameer Pankaj - Digital Twin",
+    },
+  });
 
   const system = buildDigitalTwinSystemPrompt();
 
-  const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-      // Optional but recommended by OpenRouter for analytics/rate-limits:
-      "HTTP-Referer": "http://localhost",
-      // Must be ASCII (ByteString) for fetch headers:
-      "X-Title": "Sameer Pankaj - Digital Twin",
-    },
-    body: JSON.stringify({
-      model: "openai/gpt-oss-120b:free",
-      temperature: 0.3,
-      messages: [{ role: "system", content: system }, ...safeMessages],
-    }),
+  const result = streamText({
+    model: openrouter.chat("openai/gpt-oss-120b:free"),
+    temperature: 0.3,
+    system,
+    messages: await convertToModelMessages(messages),
   });
 
-  if (!upstream.ok) {
-    const text = await upstream.text().catch(() => "");
-    return Response.json(
-      {
-        error: "OpenRouter request failed.",
-        status: upstream.status,
-        details: text.slice(0, 2000),
-      },
-      { status: 502 },
-    );
-  }
-
-  const data = (await upstream.json()) as {
-    choices?: { message?: { content?: string } }[];
-  };
-
-  const content = data?.choices?.[0]?.message?.content?.trim();
-  if (!content) {
-    return Response.json(
-      { error: "No response content from model." },
-      { status: 502 },
-    );
-  }
-
-  return Response.json({ message: content });
+  return result.toUIMessageStreamResponse();
 }
 
