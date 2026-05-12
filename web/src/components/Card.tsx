@@ -13,7 +13,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-3xl bg-gradient-to-br from-blue-500/30 via-indigo-500/22 to-purple-500/24 p-[1px]",
+        "overflow-hidden rounded-3xl bg-gradient-to-br from-blue-500/30 via-indigo-500/22 to-purple-500/24 p-[1px]",
         className,
       )}
     >

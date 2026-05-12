@@ -15,7 +15,7 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section id={id} className={cn("scroll-mt-24 py-14 sm:py-20", className)}>
+    <section id={id} className={cn("scroll-mt-28 py-14 sm:py-20", className)}>
       <div className="grid gap-8 lg:grid-cols-[1fr_2fr] lg:gap-14">
         <div className="space-y-3">
           {eyebrow ? (

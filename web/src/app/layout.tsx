@@ -15,7 +15,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: `${profile.name} — ${profile.headline}`,
     template: `%s — ${profile.name}`,
@@ -26,6 +29,8 @@ export const metadata: Metadata = {
     title: `${profile.name} — ${profile.headline}`,
     description:
       "Function ownership and integration testing in automotive programs. Requirements clarity, alignment, and delivery across global teams.",
+    url: siteUrl,
+    siteName: `${profile.name} Professional Website`,
     type: "website",
   },
   twitter: {

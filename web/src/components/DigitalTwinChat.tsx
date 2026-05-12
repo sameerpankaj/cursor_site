@@ -3,6 +3,7 @@
 import { AssistantRuntimeProvider, Suggestions, useAui } from "@assistant-ui/react";
 import { AssistantChatTransport, useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { Thread } from "@/components/assistant-ui/thread";
+import { cn } from "@/lib/cn";
 
 export function DigitalTwinChat({ className }: { className?: string }) {
   const runtime = useChatRuntime({
@@ -37,12 +38,12 @@ export function DigitalTwinChat({ className }: { className?: string }) {
 
   return (
     <div
-      className={[
+      className={cn(
         "rounded-3xl border border-black/10 bg-white/70 backdrop-blur-xl",
         "shadow-[0_0_0_1px_rgba(11,18,32,0.05),0_18px_55px_-40px_rgba(59,130,246,0.25)]",
         "overflow-hidden",
         className,
-      ].join(" ")}
+      )}
     >
       <AssistantRuntimeProvider aui={aui} runtime={runtime}>
         <Thread />

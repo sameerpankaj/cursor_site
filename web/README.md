@@ -13,6 +13,22 @@ npm run dev
 
 Then open `http://localhost:3000`.
 
+## Environment
+
+The app reads environment variables from the project root `.env` file. Start
+from the root `.env.example`:
+
+```bash
+cp ../.env.example ../.env
+```
+
+Required values:
+
+- `OPENROUTER_API_KEY`: Server-only key for the Digital Twin chat.
+- `SITE_URL`: Canonical URL for metadata, sitemap, and OpenRouter headers.
+- `ALLOWED_ORIGINS`: Comma-separated origins allowed to call `/api/chat`.
+- `OPENROUTER_TITLE`: OpenRouter analytics title.
+
 ## Where to edit content
 
 - `src/lib/profile.ts`: profile content (roles, skills, links)
@@ -23,19 +39,10 @@ Then open `http://localhost:3000`.
 
 Update the cards in `src/app/page.tsx` under the “Portfolio” section and provide `href` values.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deployment checklist
 
-## Learn More
+- Rotate any API key that has ever been shared or pasted into tools.
+- Set `OPENROUTER_API_KEY`, `SITE_URL`, `ALLOWED_ORIGINS`, and `OPENROUTER_TITLE` in the host's secret/env settings.
+- Confirm `/api/chat` works from the deployed domain and rejects other origins.
+- Confirm `/robots.txt` and `/sitemap.xml` are generated.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

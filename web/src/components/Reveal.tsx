@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { motion, type Variants } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 
 const variants: Variants = {
   hidden: { opacity: 0, y: 14 },
@@ -19,6 +19,12 @@ export function Reveal({
   children: React.ReactNode;
   delay?: number;
 }) {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    return <div>{children}</div>;
+  }
+
   return (
     <motion.div
       variants={variants}
